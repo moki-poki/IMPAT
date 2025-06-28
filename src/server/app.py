@@ -32,6 +32,7 @@ def extract_keywords(data):
     return [k for k in keywords if k]
 
 def build_markdown(data, articles, prompts, responses):
+    from openalex_api.openalex_interface import inverted_index_to_abstract
     md = ["# Submission\n"]
     md.append(f"**Location:** {data.get('location', '')}\n")
     md.append(f"**Planning Horizon:** {data.get('planning_horizon', '')}\n")
@@ -44,9 +45,9 @@ def build_markdown(data, articles, prompts, responses):
         md.append(f"### Article {i+1}\n")
         md.append(f"**Title:** {article.title}\n")
         md.append(f"**Authors:** {', '.join(article.authors)}\n")
-        md.append(f"**Abstract:** {article.abstract_inversion}\n")
-        md.append(f"**Prompt:**\n\n{prompts[i]}\n")
-        md.append(f"**LLM Response:**\n\n{responses[i]}\n")
+        readable_abstract = inverted_index_to_abstract(article.abstract_inversion)
+        md.append(f"**Abstract:** {readable_abstract}\n")
+        md.append(f"**Database Query:**\n\n{responses[i]}\n")
     return '\n'.join(md)
 
 @app.route('/submit', methods=['POST'])
