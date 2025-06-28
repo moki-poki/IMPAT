@@ -7,6 +7,7 @@ from openalex_api.openalex_interface import search_openalex, articles_to_variabl
 from openai_api.openai_api import get_prompt_result
 import itertools
 import re
+import random
 
 app = Flask(__name__, static_folder='public', static_url_path='')
 
@@ -50,6 +51,20 @@ def build_markdown(data, articles, prompts, responses):
         md.append(f"**Database Query:**\n\n{responses[i]}\n")
     return '\n'.join(md)
 
+def random_keyword_impact(keywords):
+    """
+    Randomly split 100 among the keywords, returning a list of dicts with 'keyword' and 'impact'.
+    """
+    if not keywords:
+        return []
+    n = len(keywords)
+    # Generate n-1 random cut points between 0 and 100
+    cuts = sorted([0] + [random.randint(0, 100) for _ in range(n - 1)] + [100])
+    impacts = [cuts[i+1] - cuts[i] for i in range(n)]
+    # Shuffle to avoid always giving the first keyword the largest chunk
+    random.shuffle(impacts)
+    return [{"keyword": k, "impact": v} for k, v in zip(keywords, impacts)]
+
 @app.route('/submit', methods=['POST'])
 def submit():
     data = request.json  # Expecting JSON
@@ -85,7 +100,16 @@ def submit():
         print(f"PDF conversion failed: {e}")
         pdf_url = None
 
-    return jsonify({"status": "ok", "message": "Markdown file saved!", "file_url": file_url, "pdf_url": pdf_url})
+    # Add keyword impact structure
+    keyword_impact = random_keyword_impact(keywords)
+
+    return jsonify({
+        "status": "ok",
+        "message": "Markdown file saved!",
+        "file_url": file_url,
+        "pdf_url": pdf_url,
+        "keyword_impact": keyword_impact
+    })
 
 if __name__ == '__main__':
     app.run(debug=True)

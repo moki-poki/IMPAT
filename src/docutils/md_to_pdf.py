@@ -12,7 +12,8 @@ def md_to_pdf(md_path, pdf_path=None):
     else:
         pdf_path = Path(pdf_path)
     result = subprocess.run([
-'pandoc', str(md_path), '-o', str(pdf_path), '--pdf-engine=pdflatex'    ], capture_output=True, text=True)
+        'pandoc', str(md_path), '-o', str(pdf_path), '--pdf-engine=xelatex'
+    ], capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"Pandoc failed: {result.stderr}")
     return pdf_path

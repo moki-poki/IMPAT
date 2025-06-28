@@ -59,11 +59,32 @@
     <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
       <h2 class="text-xl font-semibold mb-4">Success!</h2>
       <p class="mb-6" id="modalMessage">PDF file saved!</p>
+      <div id="impactGraph" class="mb-6"></div>
       <a id="pdfBtn" href="#" target="_blank" class="hidden inline-block bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition mb-2">Open PDF File</a>
       <button id="closeModal" class="block mt-4 text-gray-500 hover:text-gray-700 mx-auto">Close</button>
     </div>
   </div>
   <script>
+    function renderImpactGraph(impactData) {
+      if (!impactData || !impactData.length) {
+        document.getElementById('impactGraph').innerHTML = '';
+        return;
+      }
+      let maxImpact = Math.max(...impactData.map(d => d.impact));
+      let bars = impactData.map(d => `
+        <div class="flex items-center mb-1">
+          <span class="w-24 text-left text-xs">${d.keyword}</span>
+          <div class="flex-1 bg-gray-200 rounded h-4 mx-2">
+            <div class="bg-blue-500 h-4 rounded" style="width: ${(d.impact / maxImpact) * 100}%"></div>
+          </div>
+          <span class="w-10 text-right text-xs">${d.impact}%</span>
+        </div>
+      `).join('');
+      document.getElementById('impactGraph').innerHTML = `
+        <div class="mb-2 text-sm font-semibold">Keyword Impact</div>
+        <div>${bars}</div>
+      `;
+    }
     document.getElementById('mdForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
@@ -96,6 +117,7 @@
         } else {
           pdfBtn.classList.add('hidden');
         }
+        renderImpactGraph(result.keyword_impact);
         document.getElementById('resultModal').classList.remove('hidden');
       } catch (err) {
         alert('An error occurred. Please try again.');
