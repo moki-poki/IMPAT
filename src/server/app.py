@@ -71,9 +71,11 @@ def submit():
     for i, resp in enumerate(responses):
         print(f"Response {i+1}:\n{resp}\n")
     markdown_content = build_markdown(data, articles, prompts, responses)
-    output_path = Path("output.md")
+    output_filename = "output.md"
+    output_path = Path(app.static_folder) / output_filename
     output_path.write_text(markdown_content)
-    return jsonify({"status": "ok", "message": "Markdown file saved!"})
+    file_url = f"/{output_filename}"
+    return jsonify({"status": "ok", "message": "Markdown file saved!", "file_url": file_url})
 
 if __name__ == '__main__':
     app.run(debug=True)

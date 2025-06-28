@@ -54,6 +54,15 @@
       </button>
     </form>
   </div>
+  <!-- Modal -->
+  <div id="resultModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+      <h2 class="text-xl font-semibold mb-4">Success!</h2>
+      <p class="mb-6" id="modalMessage">Markdown file saved!</p>
+      <a id="downloadBtn" href="#" target="_blank" class="inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition">Open Markdown File</a>
+      <button id="closeModal" class="block mt-4 text-gray-500 hover:text-gray-700 mx-auto">Close</button>
+    </div>
+  </div>
   <script>
     document.getElementById('mdForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -78,7 +87,10 @@
           body: JSON.stringify(data)
         });
         const result = await res.json();
-        alert(result.message);
+        // Show modal with download button
+        document.getElementById('modalMessage').textContent = result.message;
+        document.getElementById('downloadBtn').href = result.file_url || '/output.md';
+        document.getElementById('resultModal').classList.remove('hidden');
       } catch (err) {
         alert('An error occurred. Please try again.');
       } finally {
@@ -87,6 +99,9 @@
         spinner.classList.add('hidden');
       }
     });
+    document.getElementById('closeModal').onclick = function() {
+      document.getElementById('resultModal').classList.add('hidden');
+    };
   </script>
 </body>
 </html>
