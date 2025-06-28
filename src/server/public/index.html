@@ -8,10 +8,43 @@
 </head>
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
   <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
-    <h1 class="text-2xl font-bold mb-6 text-center">Form to MD</h1>
+    <h1 class="text-2xl font-bold mb-6 text-center">Project Planning Form</h1>
     <form id="mdForm" class="space-y-4">
-      <input name="name" placeholder="Your name" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
-      <textarea name="details" placeholder="Details" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+      <div>
+        <label class="block font-semibold mb-1" for="location">Location</label>
+        <input id="location" name="location" type="text" placeholder="Country, region, or city" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <p class="text-xs text-gray-500">Specify the country, region, or city.</p>
+      </div>
+      <div>
+        <label class="block font-semibold mb-1" for="planning_horizon">Planning Horizon</label>
+        <select id="planning_horizon" name="planning_horizon" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+          <option value="">Select...</option>
+          <option value="short-term (0–5 years)">Short-term (0–5 years)</option>
+          <option value="medium-term (5–15 years)">Medium-term (5–15 years)</option>
+          <option value="long-term (15+ years)">Long-term (15+ years)</option>
+        </select>
+        <p class="text-xs text-gray-500">Select the planning horizon.</p>
+      </div>
+      <div>
+        <label class="block font-semibold mb-1" for="available_investment">Available Investment (EUR)</label>
+        <input id="available_investment" name="available_investment" type="number" min="0" step="any" placeholder="Amount in EUR" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        <p class="text-xs text-gray-500">Enter the amount of investment available in EUR.</p>
+      </div>
+      <div>
+        <label class="block font-semibold mb-1">Relevant Sectors</label>
+        <div class="grid grid-cols-1 gap-2">
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Agriculture" class="mr-2">Agriculture</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Food Processing" class="mr-2">Food Processing</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Retail & Distribution" class="mr-2">Retail & Distribution</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Health & Nutrition" class="mr-2">Health & Nutrition</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Water Resources" class="mr-2">Water Resources</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Land Use" class="mr-2">Land Use</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Education & Awareness" class="mr-2">Education & Awareness</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Carbon Emission" class="mr-2">Carbon Emission</label>
+          <label class="inline-flex items-center"><input type="checkbox" name="relevant_sectors" value="Job offer" class="mr-2">Job offer</label>
+        </div>
+        <p class="text-xs text-gray-500">Choose all relevant sectors impacted by the project.</p>
+      </div>
       <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Submit</button>
     </form>
   </div>
@@ -19,17 +52,18 @@
     document.getElementById('mdForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
+      const relevantSectors = Array.from(form.querySelectorAll('input[name="relevant_sectors"]:checked')).map(cb => cb.value);
       const data = {
-        name: form.name.value,
-        details: form.details.value
+        location: form.location.value,
+        planning_horizon: form.planning_horizon.value,
+        available_investment: parseFloat(form.available_investment.value),
+        relevant_sectors: relevantSectors
       };
-
       const res = await fetch('/submit', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(data)
       });
-
       const result = await res.json();
       alert(result.message);
     });
