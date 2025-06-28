@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><title>Form to MD</title></head>
+<body>
+  <form id="mdForm">
+    <input name="name" placeholder="Your name" required /><br/>
+    <textarea name="details" placeholder="Details" required></textarea><br/>
+    <button type="submit">Submit</button>
+  </form>
+
+  <script>
+    document.getElementById('mdForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        details: form.details.value
+      };
+
+      const res = await fetch('/submit', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+      alert(result.message);
+    });
+  </script>
+</body>
+</html>

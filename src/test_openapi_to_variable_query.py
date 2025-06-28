@@ -2,25 +2,36 @@ import sys
 from openalex_api.openalex_interface import search_openalex, articles_to_variable_prompt
 from openai_api.openai_api import get_prompt_result, CONTEXT_STORE
 
-# Hardcoded list of known variables
+# Hardcoded list of known variables (IPCC Special Report scenarios and related variables)
 KNOWN_VARIABLES = [
-    "climate", "impact", "lentil", "yield", "temperature", "precipitation",
-    "soil moisture", "growth rate", "photosynthesis", "harvest", "disease"
+    "SSP1-1.9", "SSP1-2.6", "SSP2-4.5", "SSP3-7.0", "SSP5-8.5",
+    "RCP2.6", "RCP4.5", "RCP6.0", "RCP8.5",
+    "CO2 concentration", "global temperature", "sea level rise",
+    "precipitation", "extreme weather", "mitigation", "adaptation",
+    "emissions", "land use", "renewable energy", "fossil fuels"
 ]
 
-# Formalized known relationship structure for context (as triples)
+# Formalized known relationship structure for context (as triples, IPCC scenarios)
 KNOWN_RELATIONSHIP_STRUCTURE = """
 Known variable relationships (subject, relation, object):
-- ("climate", "affects", "temperature")
-- ("climate", "affects", "precipitation")
-- ("temperature", "influences", "soil moisture")
-- ("precipitation", "influences", "soil moisture")
-- ("soil moisture", "impacts", "growth rate")
-- ("soil moisture", "impacts", "yield")
-- ("growth rate", "linked_to", "photosynthesis")
-- ("disease", "reduces", "yield")
-- ("disease", "affects", "harvest")
-- ("lentil", "is_a", "crop of interest")
+- ("SSP1-1.9", "is_a", "low emissions scenario")
+- ("SSP1-2.6", "is_a", "sustainable development scenario")
+- ("SSP2-4.5", "is_a", "intermediate scenario")
+- ("SSP3-7.0", "is_a", "regional rivalry scenario")
+- ("SSP5-8.5", "is_a", "high emissions scenario")
+- ("RCP2.6", "corresponds_to", "SSP1-2.6")
+- ("RCP4.5", "corresponds_to", "SSP2-4.5")
+- ("RCP6.0", "corresponds_to", "SSP4-6.0")
+- ("RCP8.5", "corresponds_to", "SSP5-8.5")
+- ("CO2 concentration", "drives", "global temperature")
+- ("global temperature", "influences", "sea level rise")
+- ("global temperature", "affects", "precipitation")
+- ("global temperature", "increases", "extreme weather")
+- ("mitigation", "reduces", "emissions")
+- ("adaptation", "responds_to", "climate impacts")
+- ("emissions", "result_from", "fossil fuels")
+- ("renewable energy", "reduces", "emissions")
+- ("land use", "affects", "CO2 concentration")
 """
 
 def main():
@@ -29,7 +40,7 @@ def main():
         sys.exit(1)
     # Set the context for all queries
     CONTEXT_STORE.value = (
-        "You are an expert in agricultural science and data extraction.\n"
+        "You are an expert in climate science and data extraction.\n"
         f"Known variables: {', '.join(KNOWN_VARIABLES)}\n"
         f"{KNOWN_RELATIONSHIP_STRUCTURE.strip()}\n"
     )
