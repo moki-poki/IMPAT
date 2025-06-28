@@ -1,5 +1,5 @@
 import sys
-from get_prompt_result import get_prompt_result
+from openai_api.openai_api import get_prompt_result
 
 def main():
     if len(sys.argv) < 2:

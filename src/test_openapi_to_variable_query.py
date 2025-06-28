@@ -1,6 +1,6 @@
 import sys
 from openalex_api.openalex_interface import search_openalex, articles_to_variable_prompt
-from openai_api.get_prompt_result import get_prompt_result
+from openai_api.openai_api import get_prompt_result
 
 # Hardcoded list of known variables
 KNOWN_VARIABLES = [
