@@ -1,9 +1,17 @@
+from dataclasses import dataclass
+from typing import List, Dict, Any
 import requests
 
-def search_openalex(terms, per_page=10):
+@dataclass
+class Article:
+    title: str
+    authors: List[str]
+    abstract_inversion: Dict[str, Any]
+
+def search_openalex(terms, per_page=10) -> List[Article]:
     """
     Query OpenAlex API with a list of terms.
-    Returns a list of dicts with title, authors, and abstract inversion.
+    Returns a list of Article dataclass instances.
     """
     query = "+".join(terms)
     url = (
@@ -27,11 +35,11 @@ def search_openalex(terms, per_page=10):
             if author_name:
                 authors.append(author_name)
         abstract_inv = work.get("abstract_inverted_index", {})
-        results.append({
-            "title": title,
-            "authors": authors,
-            "abstract_inversion": abstract_inv
-        })
+        results.append(Article(
+            title=title,
+            authors=authors,
+            abstract_inversion=abstract_inv
+        ))
     return results
 
 # Example usage:
