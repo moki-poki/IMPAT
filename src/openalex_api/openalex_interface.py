@@ -42,6 +42,42 @@ def search_openalex(terms, per_page=10) -> List[Article]:
         ))
     return results
 
+def articles_to_variable_prompt(article: Article, known_variables: list) -> str:
+    """
+    Create a prompt for a single article, including a list of known variables.
+    """
+    prompt_lines = [
+        "Given the following scientific article, list the relevant variables for this article.",
+        f"Known variables: {', '.join(known_variables)}",
+        "",
+        f"Title: {article.title}",
+        f"Authors: {', '.join(article.authors) if article.authors else 'N/A'}",
+    ]
+    if article.abstract_inversion:
+        prompt_lines.append(f"Abstract: {inverted_index_to_abstract(article.abstract_inversion)}")
+    else:
+        prompt_lines.append("Abstract: N/A")
+    prompt_lines.append(
+        "\nProvide a list of variables from the known variables that are relevant to the research described."
+    )
+    return "\n".join(prompt_lines)
+
+def inverted_index_to_abstract(abstract_inversion: dict) -> str:
+    """
+    Convert OpenAlex abstract_inverted_index to a readable abstract string.
+    """
+    if not abstract_inversion:
+        return ""
+    # Create a list where index is the word position
+    word_positions = []
+    for word, positions in abstract_inversion.items():
+        for pos in positions:
+            word_positions.append((pos, word))
+    # Sort by position and join words
+    word_positions.sort()
+    abstract_words = [word for pos, word in word_positions]
+    return " ".join(abstract_words)
+
 # Example usage:
 # terms = ["climate", "impact", "lentil"]
 # print(search_openalex(terms))
