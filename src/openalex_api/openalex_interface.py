@@ -42,13 +42,17 @@ def search_openalex(terms, per_page=10) -> List[Article]:
         ))
     return results
 
-def articles_to_variable_prompt(article: Article, known_variables: list) -> str:
+def articles_to_variable_prompt(article: Article) -> str:
     """
-    Create a prompt for a single article, including a list of known variables.
+    Create a prompt for a single article that asks the LLM to return a structured query
+    using the known variables and their relationships from the context.
+    The LLM must return a structured output (e.g., JSON).
     """
     prompt_lines = [
-        "Given the following scientific article, list the relevant variables for this article.",
-        f"Known variables: {', '.join(known_variables)}",
+        "Given the following scientific article, use the known variables and their relationships provided in the context.",
+        "Return a structured JSON object with the following fields:",
+        "- relevant_variables: a list of variable names from the known variables that are relevant to this article",
+        "- variable_query: a query string or structure that could be used to retrieve data about these variables and their relationships",
         "",
         f"Title: {article.title}",
         f"Authors: {', '.join(article.authors) if article.authors else 'N/A'}",
@@ -58,7 +62,7 @@ def articles_to_variable_prompt(article: Article, known_variables: list) -> str:
     else:
         prompt_lines.append("Abstract: N/A")
     prompt_lines.append(
-        "\nProvide a list of variables from the known variables that are relevant to the research described."
+        "\nReturn only the JSON object as your response."
     )
     return "\n".join(prompt_lines)
 

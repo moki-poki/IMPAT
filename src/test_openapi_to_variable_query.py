@@ -36,7 +36,7 @@ def main():
     terms = sys.argv[1:]
     articles = search_openalex(terms)
     for idx, article in enumerate(articles, 1):
-        prompt = articles_to_variable_prompt(article, KNOWN_VARIABLES)
+        prompt = articles_to_variable_prompt(article)
         print(f"\n--- Prompt for Article {idx} ---\n")
         print(prompt)
         print("\n--- OpenAI Response ---\n")

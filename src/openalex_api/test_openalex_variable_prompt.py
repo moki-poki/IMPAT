@@ -8,7 +8,7 @@ def main():
     terms = sys.argv[1:]
     articles = search_openalex(terms)
     for article in articles:
-        prompt = articles_to_variable_prompt(article=article, known_variables=["climate", "impact", "lentil"])
+        prompt = articles_to_variable_prompt(article=article)
         print(prompt)
         print("--- End of prompt ---")
         print()
