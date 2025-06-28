@@ -45,13 +45,25 @@
         </div>
         <p class="text-xs text-gray-500">Choose all relevant sectors impacted by the project.</p>
       </div>
-      <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">Submit</button>
+      <button id="submitBtn" type="submit" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition flex items-center justify-center">
+        <span id="submitText">Submit</span>
+        <svg id="spinner" class="hidden animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+      </button>
     </form>
   </div>
   <script>
     document.getElementById('mdForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
+      const submitBtn = document.getElementById('submitBtn');
+      const submitText = document.getElementById('submitText');
+      const spinner = document.getElementById('spinner');
+      submitBtn.disabled = true;
+      submitText.classList.add('opacity-50');
+      spinner.classList.remove('hidden');
       const relevantSectors = Array.from(form.querySelectorAll('input[name="relevant_sectors"]:checked')).map(cb => cb.value);
       const data = {
         location: form.location.value,
@@ -59,13 +71,21 @@
         available_investment: parseFloat(form.available_investment.value),
         relevant_sectors: relevantSectors
       };
-      const res = await fetch('/submit', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(data)
-      });
-      const result = await res.json();
-      alert(result.message);
+      try {
+        const res = await fetch('/submit', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        alert(result.message);
+      } catch (err) {
+        alert('An error occurred. Please try again.');
+      } finally {
+        submitBtn.disabled = false;
+        submitText.classList.remove('opacity-50');
+        spinner.classList.add('hidden');
+      }
     });
   </script>
 </body>
