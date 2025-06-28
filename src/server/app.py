@@ -75,7 +75,17 @@ def submit():
     output_path = Path(app.static_folder) / output_filename
     output_path.write_text(markdown_content)
     file_url = f"/{output_filename}"
-    return jsonify({"status": "ok", "message": "Markdown file saved!", "file_url": file_url})
+
+    # Convert MD to PDF using docutils/md_to_pdf.py
+    try:
+        from docutils.md_to_pdf import md_to_pdf
+        pdf_path = md_to_pdf(output_path)
+        pdf_url = f"/{pdf_path.name}"
+    except Exception as e:
+        print(f"PDF conversion failed: {e}")
+        pdf_url = None
+
+    return jsonify({"status": "ok", "message": "Markdown file saved!", "file_url": file_url, "pdf_url": pdf_url})
 
 if __name__ == '__main__':
     app.run(debug=True)
