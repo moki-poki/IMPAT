@@ -15,24 +15,25 @@ app = Flask(__name__, static_folder='public', static_url_path='')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
-def extract_keywords(data):
-    # Use all string fields and relevant_sectors as keywords
-    fields = [
-        data.get('location', ''),
-        data.get('planning_horizon', ''),
-    ]
-    sectors = data.get('relevant_sectors', [])
-    # Only keep alphanumeric words from fields
-    words = set()
-    for f in fields:
-        words.update(re.findall(r'\b\w+\b', f))
-    # Clean sector names to remove special characters
-    clean_sectors = [re.sub(r'[^\w ]', '', s) for s in sectors]
-    keywords = list(words.union(clean_sectors))
-    # Remove empty strings and join with + for OpenAlex
-    return [k for k in keywords if k]
+def build_openalex_keyword_prompt(data):
+    """
+    Build a prompt for OpenAI to extract a list of OpenAlex search keywords from the form data.
+    """
+    prompt = (
+        "Given the following user submission form data, return a JSON array of up to 10 relevant search keywords "
+        "that would be most effective for querying the OpenAlex scientific literature database. "
+        "Order the keywords by importance, with the most important first. "
+        "Each keyword must be a single word (no spaces or phrases). "
+        "Focus on extracting terms that best represent the research context, location, planning horizon, and relevant sectors. "
+        "Return only the JSON array as your response.\n\n"
+        f"Location: {data.get('location', '')}\n"
+        f"Planning Horizon: {data.get('planning_horizon', '')}\n"
+        f"Available Investment: {data.get('available_investment', '')} EUR\n"
+        f"Relevant Sectors: {', '.join(data.get('relevant_sectors', []))}\n"
+    )
+    return prompt
 
-def build_markdown(data, articles, prompts, responses):
+def build_markdown(data, articles, prompts, responses, keywords):
     from openalex_api.openalex_interface import inverted_index_to_abstract
     md = ["# Submission\n"]
     md.append(f"**Location:** {data.get('location', '')}\n")
@@ -40,7 +41,7 @@ def build_markdown(data, articles, prompts, responses):
     md.append(f"**Available Investment:** {data.get('available_investment', '')} EUR\n")
     md.append("**Relevant Sectors:**\n" + ''.join(f"- {s}\n" for s in data.get('relevant_sectors', [])))
     md.append("\n## Literature Search Keywords\n")
-    md.append(", ".join(extract_keywords(data)))
+    md.append(", ".join(keywords))
     md.append("\n## OpenAlex Results\n")
     for i, article in enumerate(articles):
         md.append(f"### Article {i+1}\n")
@@ -70,7 +71,41 @@ def submit():
     data = request.json  # Expecting JSON
     print("\n===== USER INPUT =====")
     print(data)
-    keywords = extract_keywords(data)
+    # Build prompt and get keywords from OpenAI
+    keyword_prompt = build_openalex_keyword_prompt(data)
+    print("\n===== KEYWORD PROMPT TO LLM =====")
+    print(keyword_prompt)
+    import json as _json
+    try:
+        keyword_response = get_prompt_result(keyword_prompt)
+        print("\n===== LLM KEYWORD RESPONSE =====")
+        print(keyword_response)
+        # Remove code block markers if present
+        if keyword_response.strip().startswith('```'):
+            keyword_response = keyword_response.strip().strip('`').strip('json').strip()
+        # Parse as JSON
+        keywords = _json.loads(keyword_response)
+        # Only keep single words, deduplicate, and clean
+        flat_keywords = []
+        for kw in keywords:
+            if isinstance(kw, str):
+                word = kw.strip()
+                if word and ' ' not in word:
+                    flat_keywords.append(word)
+        # Remove duplicates while preserving order
+        seen = set()
+        keywords = []
+        for word in flat_keywords:
+            if word not in seen:
+                seen.add(word)
+                keywords.append(word)
+        # Limit to max 5 keywords for OpenAlex search
+        keywords = keywords[:5]
+        if not isinstance(keywords, list):
+            raise ValueError("LLM did not return a list of keywords")
+    except Exception as e:
+        print(f"Keyword extraction failed: {e}")
+        keywords = []
     print("\n===== SEARCH KEYWORDS =====")
     print(keywords)
     articles = search_openalex(keywords, per_page=3)  # Limit for demo
@@ -85,7 +120,7 @@ def submit():
     print("\n===== LLM RESPONSES =====")
     for i, resp in enumerate(responses):
         print(f"Response {i+1}:\n{resp}\n")
-    markdown_content = build_markdown(data, articles, prompts, responses)
+    markdown_content = build_markdown(data, articles, prompts, responses, keywords)
     output_filename = "output.md"
     output_path = Path(app.static_folder) / output_filename
     output_path.write_text(markdown_content)
